@@ -2,12 +2,14 @@
 
 `<digit>` ::= `"0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"`
 
-`<floating point>` ::= `<digit>.<digit>`
+`<floating_point>`::= `<digit> "." <digit>`
 
-`<slotid>` ::= `<digit>` unique slot machine id
+`<text>` ::= `[a-Z]+`
 
-`<slotgame>` ::= `<text>` name of slot game
+`<slotid>` ::= `<digit>`
 
-`<betamount>` ::= `<floating point>` bet amount in euros
+`<slotgame>` ::= `<text>`
 
-`<gamble>` ::= `<slotid> <slotgame> <betamount>` function to gamble
+`<betamount>` ::= `<floating_point>` 
+
+`<gamble>` ::= `"gamble" <slotid> <slotgame> <betamount>` 
