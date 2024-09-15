@@ -1,9 +1,9 @@
 # CASINO DOMAIN
 
-`slotid` - unique slot machine id
+`<slotid>` ::= `<digit>` unique slot machine id
 
-`slotgame` - name of slot game
+`<slotgame>` ::= `<text>` name of slot game
 
-`betamount` - bet amount in euros
+`<betamount>` ::= `<floating point>` bet amount in euros
 
-`gamble <slotid> <slotgame> <betamount>` - function to gamble
+`<gamble>` ::= `<slotid> <slotgame> <betamount>` function to gamble
