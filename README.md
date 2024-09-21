@@ -4,7 +4,7 @@
 
 `<order>` - Represents a customer's request to place and order for one or more dishes, to cancel an order or to add some dishes to already placed order.
 
-`<dish_list>` - Refers to a specific food item ordered by a customer. Dishes can be of different types such as main courses, side dishes, and beverages (Recursive: Allows listing multiple dishes).
+`<dish_list>` - Refers to a specific food item ordered by a customer. Dishes can be of different types such as main courses, side dishes, and beverages (Recursive: Allows listing dish_list containing dish_list).
 
 ## **Main operations:**
 
