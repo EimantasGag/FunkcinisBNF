@@ -124,7 +124,7 @@ emptyState = State {ordersList=[]}
 -- The function must have tests.
 -- <parseQuery> ::= <order> | "view orders" | "view order table " <number>
 parseQuery :: ParserQuery Query
-parseQuery input = case parseOrder input of
+parseQuery input = case parseOrder "" input of
   Right(order, rest) -> if rest == "" then Right (CreateOrder order) else Left ("Unexpected characters after order: " ++ rest)
   Left parseOrderError -> 
     case (parseViewOrders `or2Query` parseViewOrder) input of
@@ -576,10 +576,8 @@ parseDigit [] = Left "<parseDigitError> empty input, cannot parse digit"
 parseDigit (h:t) =
   if C.isDigit h then Right(read [h], t) else Left "<parseDigitError> Not a digit"
 
-parseOrderHelper2 :: Order -> Parser Order
-parseOrderHelper2 order " ]" = Right(order, " ]")
-parseOrderHelper2 order "" = Right(order, "")
-parseOrderHelper2 order input =
+parseOrderHelper2 :: Order -> String -> Parser Order
+parseOrderHelper2 order endOfOrder input =
   let
     order1 = case and2 (\_ b -> b) parseWhitespace parseTableNumber input of
       Right(v1, r1) -> order{tableNumber=Just v1}
@@ -607,7 +605,7 @@ parseOrderHelper2 order input =
         let
           editRes = and5 (\_ _ _ _ a -> a) (parseCertainNWords 2 "" " edit order") (parseCertainChar ':') parseWhitespace (parseCertainChar '[') parseWhitespace input3
           order4 = case editRes of
-            Right(v4, r4) -> case parseOrder r4 of
+            Right(v4, r4) -> case parseOrder (endOfOrder ++ " ]") r4 of
               Right (editOrder, rest) ->
                 case and2 (\_ b -> b) parseWhitespace (parseCertainChar ']') rest of
                   Right (_,rest) -> order3{editOrder=Just editOrder}
@@ -615,25 +613,26 @@ parseOrderHelper2 order input =
               Left _ -> order3
             Left _ -> order3
           input4 = case editRes of
-            Right(v4, r4) -> case parseOrder r4 of
+            Right(v4, r4) -> case parseOrder (endOfOrder ++ " ]") r4 of
               Right (editOrder, rest) ->
                 case and2 (\_ b -> b) parseWhitespace (parseCertainChar ']') rest of
                   Right (_,rest) -> rest
                   Left _ -> "Expected ] at the end of edit order"
-              Left e -> "1"
-            Left e -> "2"
+              Left e -> "Error parsing edit order: " ++ e
+            Left e -> e
         in
           if input3 == "" then Right (order3, input3) else 
-            if input4 == "" then Right(order4, input4) else Left input4 
+            if input4 == endOfOrder then Right(order4, input4) else Left input4
 
 -- <order> ::= <command> " " <dish_list> (" " <table_number>)? (" " <payment_info>)? (" " <tip>)? (" edit order: [ " <order> " ]")?
-parseOrder :: Parser Order
-parseOrder input = 
+parseOrder :: String -> Parser Order
+parseOrder endOfOrder input = 
   let 
     mainOrder = (and3 (\a _ b -> (OrderObject a b Nothing Nothing Nothing Nothing)) parseCommand parseWhitespace parseDishList) input
   in
     case mainOrder of
-      Right (v1, r2) -> parseOrderHelper2 v1 r2
+      Right (v1, r2) -> 
+        if r2 == endOfOrder then Right(v1, r2) else parseOrderHelper2 v1 endOfOrder r2
       Left e -> Left e
   
   
