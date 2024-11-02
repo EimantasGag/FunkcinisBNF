@@ -1,0 +1,53 @@
+Welcome! Press [TAB] for auto completion.
+>>> Order Pizza, Pasta for table 12
+New order placed succesfully
+>>> view order table 12
+Printing current order for table #12:
+DISHES: 
+    MAIN COURSE: Pasta, Pizza
+    SIDE DISH: 
+    BEVERAGE: 
+PAYMENT INFORMATION: not provided 
+TIP AMOUNT: 0$ 
+
+>>> Add Soup, Cola for table 12
+Dishes added succesfully
+>>> view order table 12
+Printing current order for table #12:
+DISHES: 
+    MAIN COURSE: Pasta, Pizza
+    SIDE DISH: Soup
+    BEVERAGE: Cola
+PAYMENT INFORMATION: not provided 
+TIP AMOUNT: 0$ 
+
+>>> Remove Pizza table 12
+PARSE ERROR:12 does not start with a letter
+>>> Remove Pizza for table 12
+Dishes removed succesfully
+>>> view orders
+Printing current order for table #12:
+DISHES: 
+    MAIN COURSE: Pasta
+    SIDE DISH: Soup
+    BEVERAGE: Cola
+PAYMENT INFORMATION: not provided 
+TIP AMOUNT: 0$ 
+
+>>> Order Pizza, Pasta for table 99 pay with cash tip 57.01$ edit order: [ Add Beer edit order: [ Remove Pasta ] ]
+New order placed succesfully
+>>> view orders
+Printing current order for table #99:
+DISHES: 
+    MAIN COURSE: Pizza
+    SIDE DISH: 
+    BEVERAGE: Beer
+PAYMENT INFORMATION: paying with cash
+TIP AMOUNT: 57.01$
+Printing current order for table #12:
+DISHES: 
+    MAIN COURSE: Pasta
+    SIDE DISH: Soup
+    BEVERAGE: Cola
+PAYMENT INFORMATION: not provided 
+TIP AMOUNT: 0$
