@@ -14,53 +14,6 @@ module Lib2
     TipAmount(..),
     PaymentInfo(..),
     TableNumber,
-    parseViewOrders,
-    parseViewOrder,
-    findOrderByTable,
-    printPaymentInfo,
-    printTipAmount,
-    getAllMainCourse,
-    getAllSideDish,
-    getAllBeverage,
-    printDishList,
-    printDishes,
-    getTableNumber,
-    inNumberList,
-    printAllOrders,
-    printOrder,
-    addDishes,
-    inDishList,
-    removeDishesHelper,
-    removeDishes,
-    doEditOrder,
-    parseWord,
-    parseMainCourse,
-    parseSideDish,
-    parseBeverage,
-    parseCommand,
-    parseWhitespace,
-    parseNWords,
-    parseCertainNWords,
-    parsePaymentInfo,
-    parseChar,
-    parseCertainChar,
-    parseAmount,
-    parse2Digits,
-    parseNumber,
-    or2,
-    or2Query,
-    and2,
-    and3,
-    and4,
-    and5,
-    parseTableNumber,
-    parseTip,
-    parseDishList,
-    parseDish,
-    listDish,
-    parseDigit,
-    parseOrderHelper2,
-    parseOrder
     ) where
 
 import qualified Data.Char as C
@@ -372,7 +325,7 @@ parseWord input =
         rest = L.drop (length letters) input
     in if not (null letters)
         then Right (letters, rest)
-        else Left (input ++ " does not start with a letter")
+        else if input /= "" then Left (input ++ " does not start with a letter") else Left ("Empty string")
 
 -- <main_course> ::= "Pizza" | "Burger" | "Pasta" | "Salad" | "Steak" | "Sushi"
 parseMainCourse :: Parser Dish
@@ -624,6 +577,8 @@ parseDigit (h:t) =
   if C.isDigit h then Right(read [h], t) else Left "<parseDigitError> Not a digit"
 
 parseOrderHelper2 :: Order -> Parser Order
+parseOrderHelper2 order " ]" = Right(order, " ]")
+parseOrderHelper2 order "" = Right(order, "")
 parseOrderHelper2 order input =
   let
     order1 = case and2 (\_ b -> b) parseWhitespace parseTableNumber input of
@@ -665,8 +620,8 @@ parseOrderHelper2 order input =
                 case and2 (\_ b -> b) parseWhitespace (parseCertainChar ']') rest of
                   Right (_,rest) -> rest
                   Left _ -> "Expected ] at the end of edit order"
-              Left e -> e
-            Left e -> e
+              Left e -> "1"
+            Left e -> "2"
         in
           if input3 == "" then Right (order3, input3) else 
             if input4 == "" then Right(order4, input4) else Left input4 
