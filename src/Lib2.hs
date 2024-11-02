@@ -4,49 +4,69 @@ module Lib2
     parseQuery,
     State(..),
     emptyState,
-    stateTransition
+    stateTransition,
+    Order(..),
+    Command(..),
+    MainCourse(..),
+    SideDish(..),
+    Beverage(..),
+    Dish(..),
+    TipAmount(..),
+    PaymentInfo(..),
+    TableNumber,
+    parseViewOrders,
+    parseViewOrder,
+    findOrderByTable,
+    printPaymentInfo,
+    printTipAmount,
+    getAllMainCourse,
+    getAllSideDish,
+    getAllBeverage,
+    printDishList,
+    printDishes,
+    getTableNumber,
+    inNumberList,
+    printAllOrders,
+    printOrder,
+    addDishes,
+    inDishList,
+    removeDishesHelper,
+    removeDishes,
+    doEditOrder,
+    parseWord,
+    parseMainCourse,
+    parseSideDish,
+    parseBeverage,
+    parseCommand,
+    parseWhitespace,
+    parseNWords,
+    parseCertainNWords,
+    parsePaymentInfo,
+    parseChar,
+    parseCertainChar,
+    parseAmount,
+    parse2Digits,
+    parseNumber,
+    or2,
+    or2Query,
+    and2,
+    and3,
+    and4,
+    and5,
+    parseTableNumber,
+    parseTip,
+    parseDishList,
+    parseDish,
+    listDish,
+    parseDigit,
+    parseOrderHelper2,
+    parseOrder
     ) where
 
 import qualified Data.Char as C
 import qualified Data.List as L
 
--- | An entity which represets user input.
--- It should match the grammar from Laboratory work #1.
--- Currently it has no constructors but you can introduce
--- as many as needed.
-data Query
-
--- | The instances are needed basically for tests
-instance Eq Query where
-  (==) _ _= False
-
-instance Show Query where
-  show _ = ""
-
--- | Parses user's input.
--- The function must have tests.
-parseQuery :: String -> Either String Query
-parseQuery _ = Left "Not implemented 2"
-
--- | An entity which represents your program's state.
--- Currently it has no constructors but you can introduce
--- as many as needed.
-data State
-
--- | Creates an initial program's state.
--- It is called once when the program starts.
-emptyState :: State
-emptyState = error "Not implemented 1"
-
--- | Updates a state according to a query.
--- This allows your program to share the state
--- between repl iterations.
--- Right contains an optional message to print and
--- an updated program's state.
-stateTransition :: State -> Query -> Either String (Maybe String, State)
-stateTransition _ _ = Left "Not implemented 3"
-
--- <order> ::= <command> " " <dish_list> (" " <table_number> | " " <payment_info> | " " <tip> | " edit order: [ " <order> " ]")* +
+-- <order> ::= <command> " " <dish_list> (" " <table_number>)? (" " <payment_info>)? (" " <tip>)? (" edit order: [ " <order> " ]")? +
 
 -- <command> ::= "Order" | "Add" | "Remove" +
 
@@ -74,7 +94,30 @@ stateTransition _ _ = Left "Not implemented 3"
 
 type Parser a = String -> Either String (a, String)
 
--- <order> ::= <command> " " <dish_list> (" " <table_number> | " " <payment_info> | " " <tip> | " edit order: [ " <order> " ]")*
+type ParserQuery a = String -> Either String a 
+
+-- | An entity which represets user input.
+-- It should match the grammar from Laboratory work #1.
+-- Currently it has no constructors but you can introduce
+-- as many as needed.
+data Query = CreateOrder Order | ViewOrder TableNumber | ViewOrders
+  deriving (Show, Eq)
+-- | The instances are needed basically for tests
+-- instance Eq Query where
+--   (==) _ _= False
+
+-- instance Show Query where
+--   show _ = ""
+
+-- | An entity which represents your program's state.
+-- Currently it has no constructors but you can introduce
+-- as many as needed.
+data State = State {
+  ordersList :: [Order]
+}
+  deriving (Show, Eq)
+
+-- <order> ::= <command> " " <dish_list> (" " <table_number>)? (" " <payment_info>)? (" " <tip>)? (" edit order: [ " <order> " ]")?
 data Order = OrderObject {
   command :: Command,
   dishList :: [Dish],
@@ -82,7 +125,7 @@ data Order = OrderObject {
   paymentInfo :: Maybe PaymentInfo,
   tipAmount :: Maybe TipAmount,
   editOrder :: Maybe Order
-} deriving Show
+} deriving (Show, Eq)
 
 data Command = Order | Add | Remove
   deriving (Show, Eq)
@@ -97,13 +140,231 @@ data Beverage = Cola | Water | Juice | Wine | Beer
   deriving (Show, Eq)
 
 data Dish = MainCourse MainCourse | SideDish SideDish | Beverage Beverage
-  deriving (Show, Eq) 
+  deriving (Eq) 
+
+instance Show Dish where
+  show (MainCourse m) = show m
+  show (SideDish s) = show s
+  show (Beverage b) = show b
 
 data TipAmount = TipAmount String
-  deriving (Show, Eq)
+  deriving (Eq)
+
+instance Show TipAmount where
+  show (TipAmount amount) = amount
 
 data PaymentInfo = PayWithCard | PayWithCash
-  deriving (Show, Eq)
+  deriving (Eq)
+
+instance Show PaymentInfo where
+  show PayWithCard = "paying with card"
+  show PayWithCash = "paying with cash"
+
+type TableNumber = Int
+
+-- | Creates an initial program's state.
+-- It is called once when the program starts.
+emptyState :: State
+emptyState = State {ordersList=[]}
+
+-- | Parses user's input.
+-- The function must have tests.
+-- <parseQuery> ::= <order> | "view orders" | "view order table " <number>
+parseQuery :: ParserQuery Query
+parseQuery input = case parseOrder input of
+  Right(order, rest) -> if rest == "" then Right (CreateOrder order) else Left ("Unexpected characters after order: " ++ rest)
+  Left parseOrderError -> 
+    case (parseViewOrders `or2Query` parseViewOrder) input of
+      Right q -> Right q
+      Left _ -> Left parseOrderError
+
+parseViewOrders :: ParserQuery Query
+parseViewOrders input = case (parseCertainNWords 2 "" "view orders" input) of
+  Right (v, rest) -> if rest == "" then Right ViewOrders else Left ("Unexpected characters after view orders: " ++ rest)
+  Left err -> Left err
+
+parseViewOrder :: ParserQuery Query
+parseViewOrder input = case (and3 (\_ _ c -> c) (parseCertainNWords 3 "" "view order table") parseWhitespace parseNumber) input of
+  Right (tableNumber, rest) -> if rest == "" then Right (ViewOrder tableNumber) else Left ("Unexpected characters after view orders: " ++ rest)
+  Left err -> Left err
+
+findOrderByTable :: [Order] -> TableNumber -> Maybe Order
+findOrderByTable [] wantedTableNumber = Nothing 
+findOrderByTable (curOrder@OrderObject{command=command,tableNumber=tableNumber}:t) wantedTableNumber = 
+  case tableNumber of
+    Just number -> if wantedTableNumber == number && command == Order then Just curOrder else findOrderByTable t wantedTableNumber
+    Nothing -> findOrderByTable t wantedTableNumber
+
+printPaymentInfo :: Maybe PaymentInfo -> String -> String
+printPaymentInfo p resString = case p of
+  Just paymentInfo -> resString ++ "PAYMENT INFORMATION: " ++ show paymentInfo ++ "\n"
+  Nothing -> resString ++ "PAYMENT INFORMATION: not provided \n"
+
+printTipAmount :: Maybe TipAmount -> String -> String
+printTipAmount t resString = case t of
+  Just tipAmount -> resString ++ "TIP AMOUNT: " ++ show tipAmount ++ "\n"
+  Nothing -> resString ++ "TIP AMOUNT: 0$ \n"
+
+getAllMainCourse :: [Dish] -> [Dish] -> [Dish]
+getAllMainCourse [] res = res
+getAllMainCourse (h:t) res =
+  case h of
+    MainCourse dish -> getAllMainCourse t (MainCourse dish : res)
+    _ -> getAllMainCourse t res
+
+getAllSideDish :: [Dish] -> [Dish] -> [Dish]
+getAllSideDish [] res = res
+getAllSideDish (h:t) res =
+  case h of
+    SideDish dish -> getAllSideDish t (SideDish dish : res)
+    _ -> getAllSideDish t res
+
+getAllBeverage :: [Dish] -> [Dish] -> [Dish]
+getAllBeverage [] res = res
+getAllBeverage (h:t) res =
+  case h of
+    Beverage dish -> getAllBeverage t (Beverage dish : res)
+    _ -> getAllBeverage t res
+
+printDishList :: [Dish] -> String -> String
+printDishList [] res = res
+printDishList dishList@(h:t) res = printDishList t (res ++ show h ++ if t /= [] then ", " else "")
+
+printDishes :: [Dish] -> String
+printDishes dishList = 
+  "DISHES: " ++ "\n" ++ 
+  "    MAIN COURSE: " ++ printDishList (getAllMainCourse dishList []) "" ++ "\n" ++ 
+  "    SIDE DISH: " ++ printDishList (getAllSideDish dishList []) "" ++ "\n" ++ 
+  "    BEVERAGE: " ++ printDishList (getAllBeverage dishList []) "" ++ "\n"
+
+getTableNumber :: Order -> Maybe TableNumber
+getTableNumber OrderObject{tableNumber=tableNumber} = tableNumber 
+
+inNumberList :: Int -> [Int] -> Bool
+inNumberList number [] = False
+inNumberList number (h:t) = if number == h then True else inNumberList number t 
+
+printAllOrders :: [Order] -> [TableNumber] -> String -> String
+printAllOrders [] seenTableNumbers res = res
+printAllOrders ordersList@(h:t) seenTableNumbers res =
+  case getTableNumber h of
+    Just tableNumber -> 
+      if inNumberList tableNumber seenTableNumbers 
+        then printAllOrders t seenTableNumbers res 
+        else printAllOrders t (tableNumber :seenTableNumbers) (res ++ "Printing current order for table #" ++ show tableNumber ++ ":\n" ++ printOrder h)
+    Nothing -> printAllOrders t seenTableNumbers res
+
+printOrder :: Order -> String
+printOrder OrderObject{command=c,dishList=d,tableNumber=t,paymentInfo=p,tipAmount=tip} = 
+  let
+    resString = printDishes d
+  in
+    printTipAmount tip (printPaymentInfo p resString)
+
+addDishes :: [Order] -> Order -> TableNumber -> Maybe [Order]
+addDishes orderList OrderObject{dishList=dishList} tableNumber = 
+  let
+    orderToAddTo = findOrderByTable orderList tableNumber
+  in
+    case orderToAddTo of
+      Just order@OrderObject{dishList=dishList2} -> Just ([order{dishList=dishList ++ dishList2}] ++ orderList)
+      Nothing -> Nothing
+
+inDishList :: Dish -> [Dish] -> Bool
+inDishList dish [] = False
+inDishList dish (h:t) = if dish == h then True else inDishList dish t 
+
+removeDishesHelper :: [Dish] -> [Dish] -> [Dish] -> [Dish]
+removeDishesHelper [] removeDishList res = res
+removeDishesHelper (h:t) removeDishList res =
+  case inDishList h removeDishList of
+    True -> removeDishesHelper t removeDishList res
+    False -> removeDishesHelper t removeDishList (h : res)
+
+removeDishes :: [Order] -> Order -> TableNumber -> Maybe [Order]
+removeDishes orderList OrderObject{dishList=removeDishList} tableNumber =
+  let
+    orderRemoveFrom = findOrderByTable orderList tableNumber
+  in
+    case orderRemoveFrom of
+      Just order@OrderObject{dishList=dishList} -> Just ([order{dishList=removeDishesHelper dishList removeDishList []}] ++ orderList)
+      Nothing -> Nothing
+
+doEditOrder :: Order -> Either String Order
+doEditOrder order@OrderObject{command=c,dishList=d,tableNumber=t,paymentInfo=p,tipAmount=tip,editOrder=e} = 
+  case e of
+    Just editOrder@OrderObject{command=c2,dishList=d2,tableNumber=t2,paymentInfo=p2,tipAmount=tip2,editOrder=e2} -> 
+      case c2 of
+        Order -> 
+          case c of
+            Add -> Left "Cannot do edit order: [...], when parent order is of type Add"
+            Remove -> Left "Cannot do edit order: [...], when parent order is of type Remove"
+            Order -> 
+              let 
+                editedOrder = OrderObject{
+                                command=c2,
+                                dishList=d2,
+                                tableNumber=if t2 /= Nothing then t2 else t,
+                                paymentInfo=if p2 /= Nothing then p2 else p,
+                                tipAmount=if tip2 /= Nothing then tip2 else tip,
+                                editOrder=e2
+                              }
+              in
+                if e2 == Nothing then Right editedOrder else doEditOrder editedOrder
+        Add -> 
+          let 
+            editedOrder = OrderObject{
+                              command=c,
+                              dishList=d2 ++ d,
+                              tableNumber=t,
+                              paymentInfo=p,
+                              tipAmount=tip,
+                              editOrder=e2
+                            }
+          in
+            if e2 == Nothing then Right editedOrder else doEditOrder editedOrder
+        Remove -> 
+          let 
+            editedOrder = OrderObject{
+                              command=c,
+                              dishList=removeDishesHelper d d2 [],
+                              tableNumber=t,
+                              paymentInfo=p,
+                              tipAmount=tip,
+                              editOrder=e2
+                            }
+          in
+            if e2 == Nothing then Right editedOrder else doEditOrder editedOrder
+    Nothing -> Right order 
+
+-- | Updates a state according to a query.
+-- This allows your program to share the state
+-- between repl iterations.
+-- Right contains an optional message to print and
+-- an updated program's state.
+stateTransition :: State -> Query -> Either String (Maybe String, State)
+stateTransition state@State{ordersList=ordersList} query = case query of
+  CreateOrder order@OrderObject{command=command,tableNumber=tableNumber} -> 
+    case doEditOrder order of
+      Right order -> case command of
+        Order -> case tableNumber of 
+          Just _ -> Right (Just "New order placed succesfully", State{ordersList = [order] ++ ordersList})
+          Nothing -> Left "Failed to place a new order. New order has to provide a table number it is placed for"
+        Add -> case tableNumber of
+          Just number -> case addDishes ordersList order number of 
+            Just updatedOrdersList -> Right (Just "Dishes added succesfully", State{ordersList = updatedOrdersList})
+            Nothing -> Left ("No order placed for table #" ++ show number)
+          Nothing -> Left "Failed to add dishes. To add dishes to an order, a table number has to be provided"
+        Remove -> case tableNumber of
+          Just number -> case removeDishes ordersList order number of
+            Just updatedOrdersList -> Right (Just "Dishes removed succesfully", State{ordersList = updatedOrdersList})
+            Nothing -> Left ("No order placed for table #" ++ show number)
+          Nothing -> Left "Failed to remove dishes. To remove dishes from an order, a table number has to be provided"
+      Left falseEditOrderMsg -> Left falseEditOrderMsg
+  ViewOrders -> Right (Just (printAllOrders ordersList [] ""), state)
+  ViewOrder tableNumber -> case findOrderByTable ordersList tableNumber of
+    Just order -> Right (Just ("Printing current order for table #" ++ show tableNumber ++ ":\n" ++ printOrder order), state) 
+    Nothing -> Right (Just ("Order is not placed for table #" ++ show tableNumber), state) 
 
 parseWord :: Parser String
 parseWord input =
@@ -124,7 +385,7 @@ parseMainCourse input =
       "Salad" -> Right (MainCourse Salad, rest)
       "Steak" -> Right (MainCourse Steak, rest)
       "Sushi" -> Right (MainCourse Sushi, rest)
-      _ -> Left (word ++ " main course dish does not exist")
+      _ -> Left ("'" ++ word ++ "' dish does not exist")
     Left e -> Left e
 
 -- <side_dish> ::= "Fries" | "Garlic Bread" | "Soup"
@@ -138,7 +399,7 @@ parseSideDish input =
         case parseNWords 2 "" input of
         Right (word, rest) -> case word of
           "Garlic Bread" -> Right(SideDish GarlicBread, rest) 
-          _ -> Left (word ++ " side dish does not exist")
+          _ -> Left ("'" ++ word ++ "' dish does not exist")
         _ -> Left "<parseSideDishError> Error reading side dish"
     Left _ -> Left "<parseSideDishError> Error reading side dish"
 
@@ -152,7 +413,7 @@ parseBeverage input =
       "Juice" -> Right (Beverage Juice, rest)
       "Wine" -> Right (Beverage Wine, rest)
       "Beer" -> Right (Beverage Beer, rest)
-      _ -> Left (word ++ " beverage does not exist")
+      _ -> Left ("'" ++ word ++ "' dish does not exist")
     Left e -> Left e
 
 -- <command> ::= "Order" | "Add" | "Remove"
@@ -163,8 +424,8 @@ parseCommand input =
       "Order" -> Right (Order, rest)
       "Add" -> Right (Add, rest)
       "Remove" -> Right (Remove, rest)
-      _ -> Left "Command does not exist"
-    Left _ -> Left "Command does not exist"
+      _ -> Left ("Command '" ++ word ++ "' does not exist")
+    Left e -> Left e
 
 -- parses whitespace
 parseWhitespace :: Parser String
@@ -187,7 +448,7 @@ parseNWords n res input =
 
 -- parse n number of words separated by whitespace
 parseCertainNWords :: Int -> String -> String -> Parser String
-parseCertainNWords 0 res match input = if match == res then Right (res, input) else Left (res ++ " does not match with " ++ match)
+parseCertainNWords 0 res match input = if match == res then Right (res, input) else Left res
 parseCertainNWords n res match input =
     case parseWhitespace input of
       Left _ -> 
@@ -268,7 +529,17 @@ or2 a b = \input ->
         Left e1 ->
             case b input of
                 Right r2 -> Right r2
-                Left e2 -> Left (e1 ++ ", " ++ e2)
+                Left e2 -> Left e1
+
+or2Query :: ParserQuery a -> ParserQuery a -> ParserQuery a
+or2Query a b = \input ->
+    case a input of
+        Right r1 -> Right r1
+        Left e1 ->
+            case b input of
+                Right r2 -> Right r2
+                Left e2 -> Left e1
+
 
 and2 :: (a -> b -> c) -> Parser a -> Parser b -> Parser c
 and2 f a b = \input ->
@@ -325,7 +596,7 @@ and5 f a b c d e = \input ->
         Left e1 -> Left e1
 
 -- <table_number> ::= "for table " <number>
-parseTableNumber :: Parser Int
+parseTableNumber :: Parser TableNumber
 parseTableNumber input = (and3 (\_ _ c -> c) (parseCertainNWords 2 "" "for table") parseWhitespace parseNumber) input
 
 -- <tip> ::= "tip " <amount>
@@ -352,37 +623,63 @@ parseDigit [] = Left "<parseDigitError> empty input, cannot parse digit"
 parseDigit (h:t) =
   if C.isDigit h then Right(read [h], t) else Left "<parseDigitError> Not a digit"
 
-parseOrderHelper :: Order -> Parser Order
-parseOrderHelper order " ]" = Right(order, " ]")
-parseOrderHelper order "" = Right(order, "")
-parseOrderHelper (OrderObject{command=c,dishList=d,tableNumber=t,paymentInfo=p,tipAmount=tip,editOrder=e}) input = 
-  case and2 (\_ b -> b) parseWhitespace parseTableNumber input of 
-    Right(v1, r1) -> parseOrderHelper OrderObject{command=c,dishList=d,tableNumber=Just v1,paymentInfo=p,tipAmount=tip,editOrder=e} r1
-    Left _ ->
-      case and2 (\_ b -> b) parseWhitespace parsePaymentInfo input of
-        Right(v2, r2) -> parseOrderHelper OrderObject{command=c,dishList=d,tableNumber=t,paymentInfo=Just v2,tipAmount=tip,editOrder=e} r2
-        Left _ -> 
-          case and2 (\_ b -> b) parseWhitespace parseTip input of
-            Right(v3, r3) -> parseOrderHelper OrderObject{command=c,dishList=d,tableNumber=t,paymentInfo=p,tipAmount=Just v3,editOrder=e} r3
-            Left _ -> 
-              case and5 (\_ _ _ _ a -> a) (parseCertainNWords 2 "" " edit order") (parseCertainChar ':') parseWhitespace (parseCertainChar '[') parseWhitespace input of
-                Right(v4, r4) -> case parseOrder r4 of
-                  Right (editOrder, rest) -> 
-                    case and2 (\_ b -> b) parseWhitespace (parseCertainChar ']') rest of
-                      Right(_,rest) -> Right (OrderObject{command=c,dishList=d,tableNumber=t,paymentInfo=p,tipAmount=tip,editOrder=Just editOrder}, rest)
-                      Left _ -> Left "<parseOrderError> Expected ] at the end of edit order"
-                  Left err -> Left err 
-                Left _ -> Left ("<parseOrderError> Failed to parse, false syntax: " ++ input) 
+parseOrderHelper2 :: Order -> Parser Order
+parseOrderHelper2 order input =
+  let
+    order1 = case and2 (\_ b -> b) parseWhitespace parseTableNumber input of
+      Right(v1, r1) -> order{tableNumber=Just v1}
+      Left _ -> order
+    input1 = case and2 (\_ b -> b) parseWhitespace parseTableNumber input of
+      Right(v1, r1) -> r1
+      Left _ -> input
+  in
+    let
+      order2 = case and2 (\_ b -> b) parseWhitespace parsePaymentInfo input1 of
+        Right(v2, r2) -> order1{paymentInfo=Just v2}
+        Left _ -> order1
+      input2 = case and2 (\_ b -> b) parseWhitespace parsePaymentInfo input1 of
+        Right(v2, r2) -> r2
+        Left _ -> input1
+    in
+      let
+        order3 = case and2 (\_ b -> b) parseWhitespace parseTip input2 of
+          Right(v3, r3) -> order2{tipAmount=Just v3}
+          Left _ -> order2
+        input3 = case and2 (\_ b -> b) parseWhitespace parseTip input2 of
+          Right(v3, r3) -> r3
+          Left _ -> input2
+      in
+        let
+          editRes = and5 (\_ _ _ _ a -> a) (parseCertainNWords 2 "" " edit order") (parseCertainChar ':') parseWhitespace (parseCertainChar '[') parseWhitespace input3
+          order4 = case editRes of
+            Right(v4, r4) -> case parseOrder r4 of
+              Right (editOrder, rest) ->
+                case and2 (\_ b -> b) parseWhitespace (parseCertainChar ']') rest of
+                  Right (_,rest) -> order3{editOrder=Just editOrder}
+                  Left _ -> order3
+              Left _ -> order3
+            Left _ -> order3
+          input4 = case editRes of
+            Right(v4, r4) -> case parseOrder r4 of
+              Right (editOrder, rest) ->
+                case and2 (\_ b -> b) parseWhitespace (parseCertainChar ']') rest of
+                  Right (_,rest) -> rest
+                  Left _ -> "Expected ] at the end of edit order"
+              Left e -> e
+            Left e -> e
+        in
+          if input3 == "" then Right (order3, input3) else 
+            if input4 == "" then Right(order4, input4) else Left input4 
 
--- <order> ::= <command> " " <dish_list> (" " <table_number> | " " <payment_info> | " " <tip> | " edit order: [ " <order> " ]")*
+-- <order> ::= <command> " " <dish_list> (" " <table_number>)? (" " <payment_info>)? (" " <tip>)? (" edit order: [ " <order> " ]")?
 parseOrder :: Parser Order
 parseOrder input = 
   let 
     mainOrder = (and3 (\a _ b -> (OrderObject a b Nothing Nothing Nothing Nothing)) parseCommand parseWhitespace parseDishList) input
   in
     case mainOrder of
-      Right (v1, r2) -> parseOrderHelper v1 r2
-      Left _ -> Left "<parseOrderError> Error parsing order"
+      Right (v1, r2) -> parseOrderHelper2 v1 r2
+      Left e -> Left e
   
   
 
