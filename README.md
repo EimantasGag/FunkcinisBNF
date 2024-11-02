@@ -21,7 +21,7 @@
 
 ## **BNF Grammar for a Restaurant Ordering System: [BNF Playground link](https://bnfplayground.pauliankline.com/?bnf=<order>%20%3A%3A%3D%20<command>%20"%20"%20<dish_list>%20("%20"%20<table_number>%20%7C%20"%20"%20<payment_info>%20%7C%20"%20"%20<tip>%20%7C%20"%20edit%20order%3A%20%5B%20"%20<order>%20"%20%5D")*%0A<command>%20%3A%3A%3D%20"Order"%20%7C%20"Add"%20%7C%20"Remove"%0A<dish_list>%20%3A%3A%3D%20<dish>%20%7C%20<dish>%20"%2C%20"%20<dish_list>%0A<dish>%20%3A%3A%3D%20<main_course>%20%7C%20<side_dish>%20%7C%20<beverage>%0A<main_course>%20%3A%3A%3D%20"Pizza"%20%7C%20"Burger"%20%7C%20"Pasta"%20%7C%20"Salad"%20%7C%20"Steak"%20%7C%20"Sushi"%0A<side_dish>%20%3A%3A%3D%20"Fries"%20%7C%20"Garlic%20Bread"%20%7C%20"Salad"%20%7C%20"Soup"%0A<beverage>%20%3A%3A%3D%20"Cola"%20%7C%20"Water"%20%7C%20"Juice"%20%7C%20"Wine"%20%7C%20"Beer"%0A<table_number>%20%3A%3A%3D%20"for%20table%20"%20<number>%0A<tip>%20%3A%3A%3D%20"tip%20"%20<amount>%0A<amount>%20%3A%3A%3D%20%5B0-9%5D%2B%20("."%20%5B0-9%5D%20%5B0-9%5D)*%20"%24"%0A<number>%20%3A%3A%3D%20<digit>%20%7C%20<digit>%20<digit>%0A<digit>%20%3A%3A%3D%20%5B0-9%5D%0A<payment_info>%20%3A%3A%3D%20"pay%20with%20card"%20%7C%20"pay%20with%20cash"&name=)** 
 
-`<order> ::= <command> " " <dish_list> (" " <table_number> | " " <payment_info> | " " <tip>)* (" edit order: [ " <order> " ]")?`
+`<order> ::= <command> " " <dish_list> (" " <table_number>)? (" " <payment_info>)? (" " <tip>)? (" edit order: [ " <order> " ]")?`
 
 `<command> ::= "Order" | "Add" | "Remove"`
 
