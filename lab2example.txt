@@ -21,8 +21,10 @@ DISHES:
 PAYMENT INFORMATION: not provided 
 TIP AMOUNT: 0$ 
 
->>> Remove Pizza table 12
-PARSE ERROR:12 does not start with a letter
+>>> Remove Pizza
+ERROR:Failed to remove dishes. To remove dishes from an order, a table number has to be provided
+>>> Add Zepelinai for table 12
+PARSE ERROR:'Zepelinai' dish does not exist
 >>> Remove Pizza for table 12
 Dishes removed succesfully
 >>> view orders
