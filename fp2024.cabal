@@ -35,7 +35,6 @@ library
       Lessons.Lesson08
       Lib1
       Lib2
-      Lib22
       Lib3
   other-modules:
       Paths_fp2024
