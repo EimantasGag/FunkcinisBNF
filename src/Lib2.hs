@@ -330,7 +330,7 @@ stateTransition state@State{ordersList=ordersList} query = case query of
     Just order -> Right (Just ("Printing current order for table #" ++ show tableNumber ++ ":\n" ++ printOrder order), state) 
     Nothing -> Right (Just ("Order is not placed for table #" ++ show tableNumber), state)
   CancelOrder tableNumber -> case findOrderByTable ordersList tableNumber of
-    Just _ -> Right(Just ("Order for table #" ++ show tableNumber ++ " cancel succesfully"), State{ordersList = removeOrder ordersList tableNumber []})
+    Just _ -> Right(Just ("Order for table #" ++ show tableNumber ++ " canceled succesfully"), State{ordersList = removeOrder ordersList tableNumber []})
     Nothing -> Right (Just ("No order placed for table #" ++ show tableNumber), state)
 
 parseWord :: Parser String
