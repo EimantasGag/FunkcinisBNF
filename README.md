@@ -13,6 +13,7 @@
 - Remove dishes from an order
 - View order table `<number>`, to view a placed order for specific table number
 - View orders, to view all currently placed orders
+- Cancel order for table `<number>`, to cancel a placed order for specific table number
 
 ## **Order examples:**
 
