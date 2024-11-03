@@ -53,7 +53,7 @@ type ParserQuery a = String -> Either String a
 -- It should match the grammar from Laboratory work #1.
 -- Currently it has no constructors but you can introduce
 -- as many as needed.
-data Query = CreateOrder Order | ViewOrder TableNumber | ViewOrders
+data Query = CreateOrder Order | ViewOrder TableNumber | ViewOrders | CancelOrder TableNumber
   deriving (Show, Eq)
 -- | The instances are needed basically for tests
 -- instance Eq Query where
@@ -122,14 +122,19 @@ emptyState = State {ordersList=[]}
 
 -- | Parses user's input.
 -- The function must have tests.
--- <parseQuery> ::= <order> | "view orders" | "view order table " <number>
+-- <parseQuery> ::= <order> | "view orders" | "view order table " <number> | "cancel order " <table_number>
 parseQuery :: ParserQuery Query
 parseQuery input = case parseOrder "" input of
   Right(order, rest) -> if rest == "" then Right (CreateOrder order) else Left ("Unexpected characters after order: " ++ rest)
   Left parseOrderError -> 
-    case (parseViewOrders `or2Query` parseViewOrder) input of
+    case (or3Query parseViewOrders parseViewOrder parseCancelOrder) input of
       Right q -> Right q
       Left _ -> Left parseOrderError
+
+parseCancelOrder :: ParserQuery Query
+parseCancelOrder input = case (and3 (\a b c -> c) (parseCertainNWords 2 "" "cancel order") parseWhitespace parseTableNumber) input of
+  Right(tableNumber, rest) -> if rest == "" then Right (CancelOrder tableNumber) else Left ("Unexpected characters after view orders: " ++ rest) 
+  Left err -> Left err
 
 parseViewOrders :: ParserQuery Query
 parseViewOrders input = case (parseCertainNWords 2 "" "view orders" input) of
@@ -290,6 +295,12 @@ doEditOrder order@OrderObject{command=c,dishList=d,tableNumber=t,paymentInfo=p,t
             if e2 == Nothing then Right editedOrder else doEditOrder editedOrder
     Nothing -> Right order 
 
+removeOrder :: [Order] -> TableNumber -> [Order] -> [Order]
+removeOrder [] tableNumber res = res
+removeOrder (h:t) tableNumber res =
+  if getTableNumber h == Just tableNumber then removeOrder t tableNumber res else removeOrder t tableNumber (h : res)  
+
+
 -- | Updates a state according to a query.
 -- This allows your program to share the state
 -- between repl iterations.
@@ -317,7 +328,10 @@ stateTransition state@State{ordersList=ordersList} query = case query of
   ViewOrders -> Right (Just (printAllOrders ordersList [] ""), state)
   ViewOrder tableNumber -> case findOrderByTable ordersList tableNumber of
     Just order -> Right (Just ("Printing current order for table #" ++ show tableNumber ++ ":\n" ++ printOrder order), state) 
-    Nothing -> Right (Just ("Order is not placed for table #" ++ show tableNumber), state) 
+    Nothing -> Right (Just ("Order is not placed for table #" ++ show tableNumber), state)
+  CancelOrder tableNumber -> case findOrderByTable ordersList tableNumber of
+    Just _ -> Right(Just ("Order for table #" ++ show tableNumber ++ " cancel succesfully"), State{ordersList = removeOrder ordersList tableNumber []})
+    Nothing -> Right (Just ("No order placed for table #" ++ show tableNumber), state)
 
 parseWord :: Parser String
 parseWord input =
@@ -484,14 +498,18 @@ or2 a b = \input ->
                 Right r2 -> Right r2
                 Left e2 -> Left e1
 
-or2Query :: ParserQuery a -> ParserQuery a -> ParserQuery a
-or2Query a b = \input ->
+or3Query :: ParserQuery a -> ParserQuery a -> ParserQuery a -> ParserQuery a
+or3Query a b c = \input ->
     case a input of
         Right r1 -> Right r1
         Left e1 ->
             case b input of
                 Right r2 -> Right r2
-                Left e2 -> Left e1
+                Left e2 -> 
+                  case c input of
+                    Right r3 -> Right r3
+                    Left e3 -> Left e3
+                
 
 
 and2 :: (a -> b -> c) -> Parser a -> Parser b -> Parser c

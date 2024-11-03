@@ -23,8 +23,17 @@ TIP AMOUNT: 0$
 
 >>> Remove Pizza
 ERROR:Failed to remove dishes. To remove dishes from an order, a table number has to be provided
->>> Add Zepelinai for table 12
+>>> Add Zepelinai for table 44
 PARSE ERROR:'Zepelinai' dish does not exist
+>>> view orders
+Printing current order for table #12:
+DISHES: 
+    MAIN COURSE: Pasta, Pizza
+    SIDE DISH: Soup
+    BEVERAGE: Cola
+PAYMENT INFORMATION: not provided 
+TIP AMOUNT: 0$ 
+
 >>> Remove Pizza for table 12
 Dishes removed succesfully
 >>> view orders
@@ -52,4 +61,15 @@ DISHES:
     SIDE DISH: Soup
     BEVERAGE: Cola
 PAYMENT INFORMATION: not provided 
-TIP AMOUNT: 0$
+TIP AMOUNT: 0$ 
+
+>>> cancel order for table 12
+Order for table #12 cancel succesfully
+>>> view orders
+Printing current order for table #99:
+DISHES: 
+    MAIN COURSE: Pizza
+    SIDE DISH: 
+    BEVERAGE: Beer
+PAYMENT INFORMATION: paying with cash
+TIP AMOUNT: 57.01$
