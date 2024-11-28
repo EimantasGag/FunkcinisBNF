@@ -14,6 +14,11 @@ module Lib2
     TipAmount(..),
     PaymentInfo(..),
     TableNumber,
+    ParserQuery,
+    parseOrder,
+    parseWord,
+    parseWhitespace,
+    and2,
     ) where
 
 import qualified Data.Char as C
@@ -78,7 +83,26 @@ data Order = OrderObject {
   paymentInfo :: Maybe PaymentInfo,
   tipAmount :: Maybe TipAmount,
   editOrder :: Maybe Order
-} deriving (Show, Eq)
+} deriving (Eq)
+
+showList2 :: (Show a) => [a] -> String -> String
+showList2 [] res = res  
+showList2 (h:t) res = 
+  if null t then showList2 t (res ++ show h) else showList2 t (res ++ show h ++ ", ")
+
+showMaybe :: (Show a) => String -> Maybe a -> String -> String
+showMaybe prefix a suffix = case fmap show a of
+  Just s -> prefix ++ s ++ suffix
+  Nothing -> ""
+
+instance Show Order where
+  show OrderObject{command=c,dishList=d,tableNumber=t,paymentInfo=p,tipAmount=ta,editOrder=e} = 
+    show c ++ " " 
+    ++ showList2 d "" 
+    ++ showMaybe " for table " t "" 
+    ++ showMaybe " " p "" 
+    ++ showMaybe " tip " ta ""
+    ++ showMaybe " edit order: [ " e " ]"
 
 data Command = Order | Add | Remove
   deriving (Show, Eq)
@@ -110,8 +134,8 @@ data PaymentInfo = PayWithCard | PayWithCash
   deriving (Eq)
 
 instance Show PaymentInfo where
-  show PayWithCard = "paying with card"
-  show PayWithCash = "paying with cash"
+  show PayWithCard = "pay with card"
+  show PayWithCash = "pay with cash"
 
 type TableNumber = Int
 

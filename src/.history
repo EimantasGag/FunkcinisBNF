@@ -1,0 +1,7 @@
+Remove Soup for table 1
+Order Soup, Soup, Soup for table 1
+Remove Soup for table 99
+Order Soup, Cola for table 99 pay with cash tip 12$
+:paste
+view orders
+load
