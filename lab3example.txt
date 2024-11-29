@@ -1,0 +1,69 @@
+Welcome! Press [TAB] for auto completion, type ':paste' for multiline input
+>>> BEGIN Order Pizza for table 12; Order Pasta, Cola for table 45 pay with cash edit order: [ Add Soup ] END
+New order placed succesfully
+>>> view orders
+Printing current order for table #45:
+DISHES: 
+    MAIN COURSE: Pasta
+    SIDE DISH: Soup
+    BEVERAGE: Cola
+PAYMENT INFORMATION: pay with cash
+TIP AMOUNT: 0$ 
+Printing current order for table #12:
+DISHES: 
+    MAIN COURSE: Pizza
+    SIDE DISH: 
+    BEVERAGE: 
+PAYMENT INFORMATION: not provided 
+TIP AMOUNT: 0$ 
+
+>>> save
+State successfully saved in file
+>>> 
+[21]+  Stopped                 stack run fp2024-three --allow-different-user
+root@db69466fd197:/workspaces/fp-2024/src# stack run fp2024-three --allow-different-user
+Welcome! Press [TAB] for auto completion, type ':paste' for multiline input
+>>> view orders
+No orders placed
+>>> load
+State successfully loaded from file
+>>> view orders
+Printing current order for table #12:
+DISHES: 
+    MAIN COURSE: Pizza
+    SIDE DISH: 
+    BEVERAGE: 
+PAYMENT INFORMATION: not provided 
+TIP AMOUNT: 0$ 
+Printing current order for table #45:
+DISHES: 
+    MAIN COURSE: Pasta
+    SIDE DISH: Soup
+    BEVERAGE: Cola
+PAYMENT INFORMATION: pay with cash
+TIP AMOUNT: 0$ 
+
+>>> BEGIN Order Garlic Bread for table 99; Add Soup, Beer for table 12 END
+Dishes added succesfully
+>>> view orders
+Printing current order for table #12:
+DISHES: 
+    MAIN COURSE: Pizza
+    SIDE DISH: Soup
+    BEVERAGE: Beer
+PAYMENT INFORMATION: not provided 
+TIP AMOUNT: 0$ 
+Printing current order for table #99:
+DISHES: 
+    MAIN COURSE: 
+    SIDE DISH: Garlic Bread
+    BEVERAGE: 
+PAYMENT INFORMATION: not provided 
+TIP AMOUNT: 0$ 
+Printing current order for table #45:
+DISHES: 
+    MAIN COURSE: Pasta
+    SIDE DISH: Soup
+    BEVERAGE: Cola
+PAYMENT INFORMATION: pay with cash
+TIP AMOUNT: 0$

@@ -175,7 +175,11 @@ stateTransition state command ioChan =
 
       case parseStatements stateFromFile of
         Right (stat, _) -> case stat of
-          Batch batch -> atomically $ stateTransitionBatch state curState batch
-          Single single -> atomically $ stateTransitionBatch state curState [single]
+          Batch batch -> do
+            _ <- atomically $ stateTransitionBatch state curState batch
+            return $ Right (Just "State successfully loaded from file")
+          Single single -> do
+            _ <- atomically $ stateTransitionBatch state curState [single]
+            return $ Right (Just "State successfully loaded from file")
         Left _ -> return $ if null stateFromFile then Left "No state saved in file" else Left "File corrupted"
 
