@@ -51,6 +51,8 @@ unitTests = testGroup "Lib2 tests"
       Lib2.parseQuery "Order Zepelinai for table 12"
       @?= Left "'Zepelinai' dish does not exist"
   ]
+
+-- Test stringai renderStatements ir parseStatements funkcijoms testuoti
 propertyTestStrings :: [String]
 propertyTestStrings = [
   "BEGIN Order Pizza for table 12; Order Pizza for table 13 END", 
@@ -72,4 +74,4 @@ propertyTests =
   testGroup "Render and parse statement tests" (map (
     \testString -> QC.testProperty "Test" $ 
       fmap (Lib3.renderStatements . fst) (Lib3.parseStatements testString) == Right testString) propertyTestStrings)
-  
+
