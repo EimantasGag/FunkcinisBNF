@@ -668,12 +668,13 @@ parseOrderHelper2 order endOfOrder input =
               Right (editOrder, rest) ->
                 case and2 (\_ b -> b) parseWhitespace (parseCertainChar ']') rest of
                   Right (_,rest) -> rest
-                  Left _ -> "Expected ] at the end of edit order"
+                  Left _ -> "Expected ] at the end of edit order" ++ r4
               Left e -> "Error parsing edit order: " ++ e
             Left e -> e
         in
           if input3 == "" then Right (order3, input3) else 
-            if input4 == endOfOrder then Right(order4, input4) else Left input4
+            if input4 == endOfOrder then Right(order4, input4) else 
+              if input3 == endOfOrder then Right(order3, input3) else Left input4
 
 -- <order> ::= <command> " " <dish_list> (" " <table_number>)? (" " <payment_info>)? (" " <tip>)? (" edit order: [ " <order> " ]")?
 parseOrder :: String -> Parser Order
@@ -685,7 +686,6 @@ parseOrder endOfOrder input =
       Right (v1, r2) -> 
         if r2 == endOfOrder then Right(v1, r2) else parseOrderHelper2 v1 endOfOrder r2
       Left e -> Left e
-  
   
 
 

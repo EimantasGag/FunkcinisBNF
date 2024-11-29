@@ -61,8 +61,10 @@ propertyTestStrings = [
   "BEGIN Order Garlic Bread for table 1; Order Fries for table 2; Order Soup for table 3; Order Pizza for table 4 END",
   "BEGIN Add Pizza for table 12 END",
   "BEGIN Remove Pizza, Pasta, Pasta, Water for table 12 END",
-  "BEGIN Order Pizza for table 12 edit order: [ Add Pizza for table 12 ] END"
--- "BEGIN Add Pizza for table 12; Remove Pizza for table 12; Order Pizza for table 12 edit order: [ Add Pizza for table 12 ] END"
+  "BEGIN Order Pizza for table 12 edit order: [ Add Pizza for table 12 ] END",
+  "BEGIN Add Pizza for table 12; Remove Pizza for table 12; Order Pizza for table 12 edit order: [ Add Pizza for table 12 ] END",
+  "BEGIN Add Garlic Bread for table 12 pay with cash edit order: [ Add Pizza ]; Remove Pizza for table 12; Order Pizza for table 12 edit order: [ Add Pizza for table 12 ] END",
+  "BEGIN Add Garlic Bread for table 12 pay with cash tip 12$ edit order: [ Add Pizza, Soup edit order: [ Remove Pizza, Salad pay with cash tip 12$ edit order: [ Add Beer ] ] ]; Remove Pizza for table 3; Order Pizza for table 5 edit order: [ Add Pizza for table 12 ] END"
   ]
 
 propertyTests :: TestTree
