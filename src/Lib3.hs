@@ -14,6 +14,7 @@ module Lib3
 import Control.Concurrent ( Chan, readChan, writeChan, newChan )
 import Control.Concurrent.STM(STM, TVar, readTVar, readTVarIO, writeTVar, atomically)
 import qualified Lib2
+import System.IO.Error (catchIOError)
 
 data StorageOp = Save String (Chan ()) | Load (Chan String)
 
@@ -29,9 +30,10 @@ storageOpLoop channel = do
 
   case msg of
     Save dataToSave channel2 -> do
-      writeFile "file.txt" dataToSave
+      writeFile "savefile.txt" dataToSave
+      writeChan channel2()
     Load channel2 -> do
-      contents <- readFile "file.txt" 
+      contents <- catchIOError (readFile "savefile.txt") (\_ -> return "") 
       writeChan channel2 contents
 
   storageOpLoop channel
@@ -120,7 +122,7 @@ queriesToBatchString (h:t) res =
 -- for all s: parseStatements (renderStatements s) == Right(s, "")
 renderStatements :: Statements -> String
 renderStatements statements = case statements of
-  Batch batch -> queriesToBatchString batch "BEGIN "
+  Batch batch -> if null batch then "" else queriesToBatchString batch "BEGIN "
   Single single -> queriesToBatchString [single] "BEGIN "
 
 -- | Updates a state according to a command.
@@ -163,7 +165,7 @@ stateTransition state command ioChan =
       saveChannel <- newChan
       curState <- readTVarIO state
       writeChan ioChan (Save (renderStatements (marshallState curState)) saveChannel)
-      return $ Right (Just "Stated successfully saved in file")
+      return $ Right (Just "State successfully saved in file")
     LoadCommand -> do
       loadChannel <- newChan
       writeChan ioChan (Load loadChannel)
@@ -175,6 +177,5 @@ stateTransition state command ioChan =
         Right (stat, _) -> case stat of
           Batch batch -> atomically $ stateTransitionBatch state curState batch
           Single single -> atomically $ stateTransitionBatch state curState [single]
-        Left err -> return $ Left "File corrupted"
+        Left _ -> return $ if null stateFromFile then Left "No state saved in file" else Left "File corrupted"
 
-      return $ Right (Just "State successfully loaded from a file: ")

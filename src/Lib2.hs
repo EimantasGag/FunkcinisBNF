@@ -111,7 +111,12 @@ data MainCourse = Pizza | Burger | Pasta | Salad | Steak | Sushi
   deriving (Show, Eq)
 
 data SideDish = Fries | GarlicBread | Soup
-  deriving (Show, Eq)
+  deriving (Eq)
+
+instance Show SideDish where
+  show Fries = "Fries"
+  show GarlicBread = "Garlic Bread"
+  show Soup = "Soup"
 
 data Beverage = Cola | Water | Juice | Wine | Beer
   deriving (Show, Eq)
@@ -269,7 +274,11 @@ removeDishes orderList OrderObject{dishList=removeDishList} tableNumber =
     orderRemoveFrom = findOrderByTable orderList tableNumber
   in
     case orderRemoveFrom of
-      Just order@OrderObject{dishList=dishList} -> Just ([order{dishList=removeDishesHelper dishList removeDishList []}] ++ orderList)
+      Just order@OrderObject{dishList=dishList} -> 
+        let
+          newDishList = removeDishesHelper dishList removeDishList []
+        in
+          Just (if null newDishList then removeOrder orderList tableNumber [] else [order{dishList = newDishList}] ++ orderList)
       Nothing -> Nothing
 
 doEditOrder :: Order -> Either String Order
@@ -349,7 +358,7 @@ stateTransition state@State{ordersList=ordersList} query = case query of
             Nothing -> Left ("No order placed for table #" ++ show number)
           Nothing -> Left "Failed to remove dishes. To remove dishes from an order, a table number has to be provided"
       Left falseEditOrderMsg -> Left falseEditOrderMsg
-  ViewOrders -> Right (Just (printAllOrders ordersList [] ""), state)
+  ViewOrders -> Right (Just (if null ordersList then "No orders placed" else printAllOrders ordersList [] ""), state)
   ViewOrder tableNumber -> case findOrderByTable ordersList tableNumber of
     Just order -> Right (Just ("Printing current order for table #" ++ show tableNumber ++ ":\n" ++ printOrder order), state) 
     Nothing -> Right (Just ("Order is not placed for table #" ++ show tableNumber), state)

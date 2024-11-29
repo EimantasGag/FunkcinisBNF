@@ -55,7 +55,10 @@ propertyTestStrings :: [String]
 propertyTestStrings = [
   "BEGIN Order Pizza for table 12; Order Pizza for table 13 END", 
   "BEGIN Order Pizza for table 54 END",
-  "BEGIN Order Pizza, Cola for table 99 pay with cash tip 12$ edit order: [ Remove Pizza ] END"
+  "BEGIN Order Pizza, Cola for table 99 pay with cash tip 12$ edit order: [ Remove Pizza ] END",
+  "BEGIN Order Garlic Bread for table 12 END",
+  "BEGIN Order Garlic Bread, Fries, Soup for table 84 pay with cash edit order: [ Add Cola ]; Order Steak, Sushi for table 45 edit order: [ Remove Sushi ] END",
+  "BEGIN Order Garlic Bread for table 1; Order Fries for table 2; Order Soup for table 3; Order Pizza for table 4 END"
   ]
 
 propertyTests :: TestTree
