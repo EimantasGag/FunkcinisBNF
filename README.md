@@ -14,6 +14,17 @@
 - View order table `<number>`, to view a placed order for specific table number
 - View orders, to view all currently placed orders
 - Cancel order for table `<number>`, to cancel a placed order for specific table number
+- Group queries in batches
+- Load/Save current programs state
+
+## **Batch Processing:**
+
+Syntax: `BEGIN query1; query2 END`
+
+Examples:
+- `BEGIN Order Pizza for table 54 END`
+- `BEGIN Order Pizza for table 12; Order Pizza for table 13 END`
+- `BEGIN Add Pizza for table 12; Remove Pizza for table 12; Order Pizza for table 12 edit order: [ Add Pizza for table 12 ] END`
 
 ## **Order examples:**
 
